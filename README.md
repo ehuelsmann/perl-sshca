@@ -42,12 +42,6 @@ Available options:
 
 * `--serial=<number>`\
   Used to override the initial serial number (defaults to 1)
-* `--import-hostca=<path>`\
-  Imports the private key at `<path>` and public key at `<path>.pub` to
-  be used for the host authority, instead of generating a new key pair
-* `--import-userca=<path>`\
-  Imports the private key at `<path>` and public key at `<path>.pub` to
-  be used for the user authority, instead of generating a new key pair
 
 ### issue
 
@@ -66,7 +60,10 @@ Available options:
 * `--option=<option>`\
   Add the given option to the certificate; this option may be passed multiple times
 * `--principal=<principal>`\
-  Adds the given principal to the certificate; this option may be passed multiple times
+  Adds the given principal to the certificate; this option may be passed multiple times.
+  Principles on "host" certificates must be host names or IP addresses; principles on
+  "user" certificates the values are documented to be user names, but can also be used
+  as the more general concept of tags.
 
 ### renew
 
@@ -75,7 +72,7 @@ Available options:
 ```
 
 Issues a new certificate using the input data that was provided to generate the
-certificate with serial number `<identifier>`.
+certificate with serial number `<identifier>`, except for the validity period.
 
 Available options:
 
@@ -83,12 +80,14 @@ Available options:
   Used to change the interpretation of the `<identifier>` argument.
   * `--serial` indicates the identifier argument is to be interpreted as a certificate
     serial number.
-  * `--fingerprint` indicates the identifier argument is to be interpreted as a public
+  * (planned) `--fingerprint` indicates the identifier argument is to be interpreted as a public
     key finger print; in case multiple certificates have been issued for this public
     key the last issued certificate is renewed.
-  * `--identity` indicates the identifier argument is to be interpreted as a certificate
+  * (planned) `--identity` indicates the identifier argument is to be interpreted as a certificate
     identity; in case multiple certificates have been issued for this identity the last
     issued certificate is renewed.
+* `--validity`\
+  Indicates the validity period of the new certificate.
 
 ### revoke
 
@@ -97,6 +96,14 @@ Planned.
 ### history
 
 Planned.
+
+## GLOBAL OPTIONS
+
+These options can be specified before commands and are accepted with all commands:
+
+* `--debug`
+* `--config` (ignored on `init` command)
+* `--basedir` (ignored on `init` command)
 
 ## ENVIRONMENT VARIABLES
 
@@ -114,7 +121,23 @@ Used to override the location of the administrative files.
 
 ## CONFIGURATION
 
+The configuration file (`sshca.conf`) is a YAML file with the following keys:
+
+* `basedir`
+* `ca_keytype`\
+  Default: `ed25519`
+* `hostcert_validity`\
+  Default: `+53w`
+* `usercert_validity`\
+  Default: `+13w1d`
+
 ## FUTURE DEVELOPMENT
+
+The current version stores the certificate data in the filesystem. Next iterations
+should be more flexible and contain configurable storage backends, e.g. using DBI
+which would allow storing the data in SQLite or PostgreSQL.
+
+
 
 ## SEE ALSO
 

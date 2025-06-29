@@ -101,7 +101,7 @@ Used to change the interpretation of the C<identifier> argument.
 
 =over 8
 
-=item * C<--seria> indicates the identifier argument is to be interpreted as a
+=item * C<--serial> indicates the identifier argument is to be interpreted as a
 certificate serial number.
 
 =item * (planned) C<--fingerprint> indicates the identifier argument is to be

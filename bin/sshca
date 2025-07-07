@@ -289,6 +289,8 @@ sub cmd_init(@args) {
       on your clients to recognize certificates of hosts being logged into:
          https://github.com/ehuelsmann/perl-sshca/...
       EOF
+
+    return 0;
 }
 
 sub _validity_for_cert( $cert ) {
@@ -349,6 +351,8 @@ sub cmd_issue(@args) {
     my $serial = cert_serial( $cert );
     say STDERR "$Type certificate with identity '$identity' and serial number $serial:";
     say cert_certkey( $cert );
+
+    return 0;
 }
 
 sub cmd_renew(@args) {
@@ -365,12 +369,16 @@ sub cmd_renew(@args) {
     cert_save( $cert );
 
     say cert_certkey( $renewed );
+
+    return 0;
 }
 
 sub cmd_revoke(@args) {
+    return 0;
 }
 
 sub cmd_history(@args) {
+    return 0;
 }
 
 
@@ -388,7 +396,7 @@ HELP
 sub usage() {
 }
 
-if (@ARGV == 0 or $ARGV[0] eq 'help') {
+if (@ARGV == 0 or $ARGV[0] eq 'help' or $ARGV[0] eq '--help') {
     usage();
     exit 0;
 }

@@ -302,8 +302,6 @@ sub _validity_for_cert( $cert ) {
 }
 
 sub cmd_issue(@args) {
-    my @options;
-    my @principals;
     my $type = opt( 'certtype' );
 
     my $identity = shift @args;
@@ -339,8 +337,8 @@ sub cmd_issue(@args) {
     }
     my $cert = cert_new( $identity,
                          pubkey => $pubkey,
-                         options => \@options,
-                         principals => \@principals,
+                         options => opt( 'certoptions' ),
+                         principals => opt( 'certprincipals' ),
                          type => $type );
     cert_serial( $cert, conf_next_serial() );
     cert_validity( $cert, _validity_for_cert( $cert ) );

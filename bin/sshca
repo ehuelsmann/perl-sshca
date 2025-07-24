@@ -228,7 +228,7 @@ sub ssh_cert_issue($cert) {
     }
     push @cmd_args, '-s', $ca, $pubkey_fn;
 
-    say join(' ', map { "'$_'" } @cmd_args)
+    say STDERR join(' ', map { "'$_'" } @cmd_args)
         if $DEBUG;
 
     system @cmd_args;
@@ -252,7 +252,7 @@ sub _init_ca_key( %args ) {
         push @args, ('-C', $args{comment});
     }
 
-    say "Generating $args{name} key: " . join(' ', map { qq{"$_"} } @args)
+    say STDERR "Generating $args{name} key: " . join(' ', map { qq{"$_"} } @args)
         if $DEBUG;
     system(@args);
 }

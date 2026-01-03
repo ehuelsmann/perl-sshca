@@ -131,6 +131,32 @@ Planned.
 
 Planned.
 
+=head2 list
+
+Lists certificates.
+
+Available options:
+
+=over 8
+
+=item * C<--expiry=YYYY-MM-DDThh:mm:ss>
+
+Exclude certs expiring after C<YYYY-MM-DDThh:mm:ss> (ISO 8601 date format).
+
+=back
+
+=head2 cleanup
+
+Deletes expired certificates.
+
+Available options:
+
+=over 8
+
+=item * C<--dry-run>
+
+=back
+
 =head1 GLOBAL OPTIONS
 
 These options can be specified before commands and are accepted with all commands:

@@ -96,7 +96,7 @@ sub _map_certs($dir, $cb) {
         if (-d $path) {
             _map_certs( $path, $cb );
         } else {
-            $cb->( cert_load_from_path( $path ) );
+            $cb->( cert_load_from_path( $path ), $path );
         }
     }
 
@@ -128,9 +128,11 @@ sub cert_identity($cert) {
     return $cert->{id};
 }
 
-sub cert_path($serial, $create = undef) {
+sub cert_path($serial_or_cert, $create = undef) {
+    my $serial = (ref $serial_or_cert)
+        ? $serial_or_cert->{serial} : $serial_or_cert;
     $digest->reset;
-    $digest->add( $serial );
+    $digest->add( "$serial" );
     my $hash = $digest->hexdigest;
     $hash =~ m/^(..)(..)/;
 
@@ -466,13 +468,68 @@ sub cmd_history(@args) {
     return 0;
 }
 
+sub _filter_expiry($cb) {
+    say STDERR "Filtering by expiry: $options{expiry}";
+    my $before = Time::Piece->strptime( $options{expiry}, ISO_DATE_FMT );
+    sub ($cert_data, $cert, @rest) {
+        return unless ($cert_data->{Valid}
+                       and $cert_data->{Valid}->{to}
+                       and $cert_data->{Valid}->{to} < $before);
+        $cb->($cert_data, $cert, @rest);
+    }
+}
+
+sub _filter_issued($cb) {
+    say STDERR "Filtering ISSUED certs only";
+    sub ($cert_data, $cert, @rest) {
+        return unless $cert->{status} eq 'ISSUED';
+        $cb->($cert_data, $cert, @rest);
+    }
+}
+
+sub _filter_wrap_parsed_cert($cb) {
+    sub ($cert, @rest) {
+        my $data = ssh_cert_parse( $cert );
+        $cb->( $data, $cert, @rest );
+    }
+}
+
 sub cmd_list(@args) {
-    map_certs(
-        sub ($cert) {
-            my $data = ssh_cert_parse( $cert );
-            my $enddate = $data->{Valid}->{to};
+    my $matched = '';
+    my $fn =
+        sub ($cert_data, $cert, $path, @) {
+            my $cert_path = cert_path( $cert->{serial} );
+            my $enddate = $cert_data->{Valid}->{to};
             $enddate = $enddate ? ('/' . $enddate->datetime) : '';
             say "$cert->{serial}/$cert->{state}/$cert->{id}$enddate";
+            $matched = 1;
+    };
+    $fn = _filter_expiry( $fn )
+        if $options{expiry};
+    $fn = _filter_wrap_parsed_cert( $fn );
+    map_certs($fn);
+
+    # exit code as 'grep':
+    return ($matched ? 0 : 1);
+}
+
+sub cmd_cleanup(@args) {
+    my $now = gmtime();
+    say "Dry-run cleanup\n" if $options{"dry-run"};
+    map_certs(
+        sub ($cert, $path, @) {
+            my $data = ssh_cert_parse( $cert );
+            my $enddate = $data->{Valid}->{to};
+            if ($enddate
+                and $enddate < $now) {
+                say "Removing expired cert with serial '$cert->{serial}'";
+                unless ($options{"dry-run"}) {
+                    my $p = cert_path( $cert );
+                    unless (unlink( $p ) == 1) {
+                        die "Unable to remove certificate path '$p' (reported: $path)";
+                    }
+                }
+            }
         });
 
     return 0;
@@ -488,6 +545,7 @@ usage: sshca <command> [options] args...
     revoke
     history
     list
+    cleanup
 HELP
 
 sub usage() {
@@ -505,6 +563,7 @@ my %cmd = (
     revoke => \&cmd_revoke,
     history => \&cmd_history,
     list => \&cmd_list,
+    cleanup => \&cmd_cleanup,
     );
 
 my %common_opts = (
@@ -529,12 +588,17 @@ my %cmd_opts = (
                 'validity=s'  => \$options{certvalidity},
                 %common_opts },
     revoke => { 'serial'      => sub { $options{renewal} = 'serial' },
-               'fingerprint' => sub { $options{renewal} = 'fingerprint'; die "Fingerprint renewals are planned\n" },
+                'fingerprint' => sub { $options{renewal} = 'fingerprint'; die "Fingerprint renewals are planned\n" },
                'identity'    => sub { $options{renewal} = 'identity'; die "Identity renewals are planned\n" },
                'validity=s'  => \$options{certvalidity},
                %common_opts },
     history => { %common_opts },
-    list    => { %common_opts }
+    list    => { 'expiry=s'    => sub {
+                      $options{expiry} = ($_[1] =~ s/[+]00:00$//r);
+                 },
+                 %common_opts },
+    cleanup => { 'dry-run' => \$options{"dry-run"},
+                 %common_opts },
     );
 
 Getopt::Long::Configure( 'require_order' );

@@ -154,7 +154,13 @@ sub cert_load($serial) {
     my $path = cert_path($serial);
     open(my $fh, '<:encoding(UTF-8)', $path)
         or die "Unable to open certificate file for serial '$serial': $!";
-    return $json->decode( do { local $/ = undef; <$fh> } );
+
+    my $rv;
+    unless (eval { $rv = $json->decode( do { local $/ = undef; <$fh> } ); 1; }) {
+        die "Failed to load cert data from '$path': $@";
+    }
+
+    return $rv;
 }
 
 sub cert_save($cert) {

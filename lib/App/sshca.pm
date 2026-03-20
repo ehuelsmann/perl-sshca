@@ -143,6 +143,10 @@ Available options:
 
 Exclude certs expiring after C<YYYY-MM-DDThh:mm:ss> (ISO 8601 date format).
 
+=item * C<--issued>
+
+Only list certs in the C<issued> state. This excludes renewed and revoked certs.
+
 =back
 
 =head2 cleanup

@@ -622,12 +622,14 @@ my %cmd_opts = (
     );
 
 Getopt::Long::Configure( 'require_order' );
-GetOptionsFromArray(\@ARGV, %common_opts);
+GetOptionsFromArray(\@ARGV, %common_opts)
+    or exit 1;
 my $command = shift @ARGV;
 if ($cmd{$command}) {
     configure();
     Getopt::Long::Configure( 'permute' );
-    GetOptionsFromArray(\@ARGV, $cmd_opts{$command}->%*);
+    GetOptionsFromArray(\@ARGV, $cmd_opts{$command}->%*)
+        or exit 1;
     exit $cmd{$command}->(@ARGV);
 }
 else {

@@ -37,8 +37,8 @@ my %conf_envvars = (
 my %conf_handlers = (
     basedir           => sub($value) {
         $value
-        // $ENV{HOME} ? File::Spec->catdir( $ENV{HOME}, 'sshca' )
-            : File::Spec->catdir( '.', 'sshca' )
+        // ($ENV{HOME} ? File::Spec->catdir( $ENV{HOME}, 'sshca' )
+            : File::Spec->catdir( '.', 'sshca' ))
     },
     cadir             => sub($value) { $value // File::Spec->catdir( opt( 'basedir' ), 'ca' ) },
     caserial          => sub($) { File::Spec->catfile( opt( 'cadir' ), 'serial' ) },

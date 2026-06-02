@@ -447,8 +447,8 @@ sub cmd_renew(@args) {
     my $serial = shift @args;
     my $cert = cert_load( $serial );
 
-    my $serial  = conf_next_serial;
-    my $renewed = cert_renew( $cert, $serial );
+    my $new_serial  = conf_next_serial;
+    my $renewed     = cert_renew( $cert, $new_serial );
     cert_validity( $renewed, _validity_for_cert( $renewed ) );
     ssh_cert_issue( $renewed );
     cert_save( $renewed );

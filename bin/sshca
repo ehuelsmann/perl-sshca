@@ -63,11 +63,17 @@ my %options = ();
 my %config = ();
 
 sub opt($opt, $value = undef) {
+    my $default = defined $value ? $value : '<undef>';
+    say "Resolving option '$opt' with default value '$default'"
+        if $DEBUG;
     $options{$opt} = $value if defined $value;
     my $val = $options{$opt} // ($conf_envvars{$opt} ? $ENV{$conf_envvars{$opt}} : undef) // $config{$opt};
     if (my $h = $conf_handlers{$opt}) {
-        return $h->($val);
+        $val = $h->($val);
     }
+    my $str_val = defined $val ? $val : '<undef>';
+    say "Option '$opt' resolved to: '$str_val'"
+        if $DEBUG;
     return $val;
 }
 
@@ -348,8 +354,10 @@ sub _init_ca_key( %args ) {
 }
 
 sub cmd_init(@args) {
-    my $serial = $options{serial} // 1;
+    say 'Initialization started with arguments: ' . join(', ', map { "'$_'" } @args)
+        if $DEBUG;
 
+    my $serial = $options{serial} //= 1;
     my $basedir = opt( 'basedir', (shift @args) );
     die "Unable to create CA base directory '$basedir': Path exists\n"
         if -e $basedir;

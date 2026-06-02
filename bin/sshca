@@ -24,7 +24,7 @@ my $json = JSON::PP->new->utf8->canonical;
 my $digest = Digest->new('SHA-256');
 
 my @config_locations = (
-    $ENV{SSHCA_CONF},
+    $ENV{SSHCA_CONF} ? ($ENV{SSHCA_CONF},) : (),
     '/etc/sshca/sshca.conf',
     '/usr/local/etc/sshca/sshca.conf',
     '/opt/sshca/etc/sshca.conf',
@@ -64,7 +64,7 @@ my %config = ();
 
 sub opt($opt, $value = undef) {
     $options{$opt} = $value if defined $value;
-    my $val = $options{$opt} // $ENV{$conf_envvars{$opt}} // $config{$opt};
+    my $val = $options{$opt} // ($conf_envvars{$opt} ? $ENV{$conf_envvars{$opt}} : undef) // $config{$opt};
     if (my $h = $conf_handlers{$opt}) {
         return $h->($val);
     }
